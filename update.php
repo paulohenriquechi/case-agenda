@@ -20,11 +20,12 @@
         $data = limparPost($_POST["data"]);
         $email = limparPost($_POST["email"]);
         $telefone = limparPost($_POST["telefone"]);
-        $foto = $_FILES["foto"];
-        echo var_dump($foto);
+        $fotoNova = $_FILES["foto"];
+        echo var_dump($fotoNova);
+        echo var_dump($fotoAntiga);
         $erro = [];
 
-        if(empty($nome)||empty($data)||empty($email)||empty($telefone)||empty($foto)){
+        if(empty($nome)||empty($data)||empty($email)||empty($telefone)){
             $erro_geral = "Todos os campos são obrigatórios!";
         }else{
             if (!preg_match("/^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ'\s]+$/",$nome)) {
@@ -48,25 +49,31 @@
                 $erro["erro_telefone"] = "Permitido apenas números!";
             }
 
-            $tamanhoMaxFoto = 2097152;
-            $extensaoPermitida = array("jpg", "png", "jpeg");
-            $extensaoFoto = pathinfo($foto["name"], PATHINFO_EXTENSION);
-    
-            if($foto["size"]>=$tamanhoMaxFoto){
-                $erro["erro_foto"] = "Tamanho máximo 2mb";
+            if(empty($fotoNova["name"])){
+                $foto = $fotoAntiga;
             }else{
-                if(in_array($extensaoFoto, $extensaoPermitida)){
-                    $pastaImagens = "imagens/";
-                    $tempNomeFoto = $_FILES["foto"]["tmp_name"];
-                    $novoNomeFoto = uniqid().".$extensaoFoto";
-                    if(empty($erro)){
-                        move_uploaded_file($tempNomeFoto, $pastaImagens.$novoNomeFoto);
-                        $foto = $novoNomeFoto;
-                    }
+                $tamanhoMaxFoto = 2097152;
+                $extensaoPermitida = array("jpg", "png", "jpeg");
+                $extensaoFoto = pathinfo($fotoNova["name"], PATHINFO_EXTENSION);
+        
+                if($fotoNova["size"]>=$tamanhoMaxFoto){
+                    $erro["erro_foto"] = "Tamanho máximo 2mb";
                 }else{
-                    $erro["erro_foto"] = "Tipo de arquivo inválido ($extensaoFoto), não foi possivel fazer upload.";
+                    if(in_array($extensaoFoto, $extensaoPermitida)){
+                        $pastaImagens = "imagens/";
+                        $tempNomeFoto = $_FILES["foto"]["tmp_name"];
+                        $novoNomeFoto = uniqid().".$extensaoFoto";
+                        if(empty($erro)){
+                            move_uploaded_file($tempNomeFoto, $pastaImagens.$novoNomeFoto);
+                            $foto = $novoNomeFoto;
+                        }
+                    }else{
+                        $erro["erro_foto"] = "Tipo de arquivo inválido ($extensaoFoto), não foi possivel fazer upload.";
+                    }
                 }
+
             }
+
 
             if(empty($erro)){
                 Cadastro::update($id, $nome, $data, $email, $telefone, $foto);
@@ -131,7 +138,7 @@
             </div>
             <div class="input-container">
                 <label for="">Foto de perfil:</label>
-                <input <?php if(isset($erro["erro_foto"])||isset($erro_geral)){echo "class='erro-input'";} ?> type="file" name="foto" id="foto" placeholder="Tamanho máximo 2MB" required>
+                <input <?php if(isset($erro["erro_foto"])||isset($erro_geral)){echo "class='erro-input'";} ?> type="file" name="foto" id="foto" placeholder="Tamanho máximo 2MB">
                 <p class="erro-msg">
                     <?php if(isset($erro["erro_foto"])){echo $erro["erro_foto"];}?>
                 </p>
